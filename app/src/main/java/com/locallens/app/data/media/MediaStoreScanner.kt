@@ -95,7 +95,7 @@ class MediaStoreScanner @Inject constructor(
         if (mimeType !in ALLOWED_MIME_TYPES) return null
         if (width == 0 || height == 0) return null
         if (size < MIN_FILE_SIZE) return null
-        if (EXCLUDED_PATH_SEGMENTS.any { filePath.contains(it) }) return null
+        if (EXCLUDED_PATH_SEGMENTS.any { filePath.contains(it, ignoreCase = true) }) return null
 
         val contentUri = ContentUris.withAppendedId(collectionUri, id)
         val dateAdded = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)) * 1000
