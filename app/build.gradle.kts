@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.compose.ui.test.junit4)
@@ -111,6 +112,10 @@ dependencies {
     // ObjectBox
     implementation(libs.objectbox.android)
     implementation(libs.objectbox.kotlin)
+    kapt(libs.objectbox.processor)
+
+    // ExifInterface
+    implementation(libs.exifinterface)
 
     // CameraX
     implementation(libs.camera.core)

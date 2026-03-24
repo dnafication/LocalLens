@@ -4,11 +4,13 @@ kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
 compose-bom = "2024.01.00"
 hilt = "2.50"
+hilt-work = "1.1.0"
 work = "2.9.0"
 coroutines = "1.7.3"
 coil = "2.5.0"
 mlkit-face = "16.1.7"
 tflite = "2.14.0"
+tflite-support = "0.4.4"
 objectbox = "4.0.3"
 mockk = "1.13.8"
 junit5 = "5.10.1"
@@ -18,6 +20,7 @@ navigation-compose = "2.7.6"
 hilt-navigation-compose = "1.1.0"
 core-ktx = "1.12.0"
 camera = "1.3.1"
+exifinterface = "1.3.7"
 
 [libraries]
 # Compose BOM
@@ -27,6 +30,7 @@ compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
@@ -50,7 +54,7 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 # WorkManager
 work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-navigation-compose" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-work" }
 
 # Coroutines
 coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -65,12 +69,16 @@ mlkit-face-detection = { group = "com.google.mlkit", name = "face-detection", ve
 
 # TensorFlow Lite
 tflite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tflite" }
-tflite-support = { group = "org.tensorflow", name = "tensorflow-lite-support", version.ref = "tflite" }
+tflite-support = { group = "org.tensorflow", name = "tensorflow-lite-support", version.ref = "tflite-support" }
 tflite-gpu = { group = "org.tensorflow", name = "tensorflow-lite-gpu", version.ref = "tflite" }
 
 # ObjectBox
 objectbox-android = { group = "io.objectbox", name = "objectbox-android", version.ref = "objectbox" }
 objectbox-kotlin = { group = "io.objectbox", name = "objectbox-kotlin", version.ref = "objectbox" }
+objectbox-processor = { group = "io.objectbox", name = "objectbox-processor", version.ref = "objectbox" }
+
+# ExifInterface
+exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 
 # CameraX
 camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camera" }
