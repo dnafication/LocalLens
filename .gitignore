@@ -3,3 +3,8 @@
 build/
 *.iml
 local.properties
+app/build/
+*.apk
+*.aab
+captures/
+.DS_Store

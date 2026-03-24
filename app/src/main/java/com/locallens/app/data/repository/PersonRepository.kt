@@ -83,7 +83,7 @@ class PersonRepository @Inject constructor(private val boxStore: BoxStore) {
         val faces = faceBox.query(FaceDetection_.personId.equal(id)).build().find()
         boxStore.runInTx {
             for (face in faces) {
-                face.person.targetId = 0
+                face.person.targetId = 0L
                 faceBox.put(face)
             }
             personBox.remove(id)

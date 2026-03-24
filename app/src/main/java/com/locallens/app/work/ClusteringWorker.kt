@@ -23,8 +23,8 @@ class ClusteringWorker @AssistedInject constructor(
         val unassigned = faceRepo.getUnassignedEmbeddings()
         if (unassigned.size < 5) return Result.success()
 
-        val existingPersons = personRepo.getAll()
-        val result = clusterer.cluster(unassigned, existingPersons)
+        val existingPersonCentroids = faceRepo.getPersonCentroids()
+        val result = clusterer.cluster(unassigned, existingPersonCentroids)
         personRepo.applyClusteringResult(result)
         return Result.success()
     }

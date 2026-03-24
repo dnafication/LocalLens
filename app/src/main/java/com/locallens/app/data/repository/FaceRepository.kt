@@ -25,7 +25,7 @@ class FaceRepository @Inject constructor(private val boxStore: BoxStore) {
     }
 
     fun getUnassignedEmbeddings(): List<DbscanClusterer.ClusteringInput> {
-        return faceBox.query(FaceDetection_.personId.equal(0)).build().find()
+        return faceBox.query(FaceDetection_.personId.equal(0L)).build().find()
             .filter { it.embedding.isNotEmpty() }
             .map { DbscanClusterer.ClusteringInput(it.id, it.embedding) }
     }
@@ -35,6 +35,25 @@ class FaceRepository @Inject constructor(private val boxStore: BoxStore) {
             if (face.embedding.isEmpty()) Float.MAX_VALUE
             else cosineDistance(face.embedding, embedding)
         }.take(maxResults)
+    }
+
+    /**
+     * Computes the mean embedding (centroid) for each person that has confirmed face detections.
+     * Returns a map of personId -> mean embedding for use in cluster assignment.
+     */
+    fun getPersonCentroids(): Map<Long, FloatArray> {
+        val allFaces = faceBox.all.filter { it.embedding.isNotEmpty() }
+        val byPerson = allFaces.groupBy { it.person.targetId }
+            .filter { (personId, _) -> personId > 0L }
+        return byPerson.mapValues { (_, faces) ->
+            val dim = faces[0].embedding.size
+            val mean = FloatArray(dim)
+            for (face in faces) {
+                for (i in face.embedding.indices) mean[i] += face.embedding[i]
+            }
+            val count = faces.size.toFloat()
+            FloatArray(dim) { mean[it] / count }
+        }
     }
 
     fun getMediaFilesForPerson(personId: Long): Flow<List<MediaFile>> = flow {

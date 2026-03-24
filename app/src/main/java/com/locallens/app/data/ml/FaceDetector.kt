@@ -32,13 +32,13 @@ class FaceDetector @Inject constructor() {
             .addOnFailureListener { e -> cont.resumeWithException(e) }
     }
 
-    fun Face.passesQualityFilter(bitmap: Bitmap): Boolean {
-        val box = boundingBox
+    fun passesQualityFilter(face: Face, bitmap: Bitmap): Boolean {
+        val box = face.boundingBox
         val boxWidth = box.width()
         val boxHeight = box.height()
         if (boxWidth < 48 || boxHeight < 48) return false
-        if (headEulerAngleY.absoluteValue > 45f) return false
-        if (headEulerAngleX.absoluteValue > 30f) return false
+        if (face.headEulerAngleY.absoluteValue > 45f) return false
+        if (face.headEulerAngleX.absoluteValue > 30f) return false
         return true
     }
 }

@@ -1,6 +1,5 @@
 package com.locallens.app.data.clustering
 
-import com.locallens.app.data.db.entities.Person
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,9 +19,16 @@ class DbscanClusterer @Inject constructor() {
         val centroids: Map<Long, FloatArray>
     )
 
+    /**
+     * Clusters unassigned face embeddings.
+     *
+     * @param unassigned List of face embeddings to cluster.
+     * @param existingPersonCentroids Map of personId -> mean embedding centroid for confirmed persons.
+     *        Used to assign faces to existing clusters before running DBSCAN on remainders.
+     */
     fun cluster(
         unassigned: List<ClusteringInput>,
-        existingPersons: List<Person>
+        existingPersonCentroids: Map<Long, FloatArray>
     ): ClusteringResult {
         if (unassigned.isEmpty()) return ClusteringResult(emptyMap(), emptyMap())
 
@@ -30,12 +36,11 @@ class DbscanClusterer @Inject constructor() {
         val assignments = mutableMapOf<Long, Long>()
 
         for (face in unassigned) {
-            val match = existingPersons.firstOrNull { person ->
-                val centroid = computeCentroid(person) ?: return@firstOrNull false
+            val matchPersonId = existingPersonCentroids.entries.firstOrNull { (_, centroid) ->
                 cosineDistance(face.embedding, centroid) < EPSILON
-            }
-            if (match != null) {
-                assignments[face.faceDetectionId] = match.id
+            }?.key
+            if (matchPersonId != null) {
+                assignments[face.faceDetectionId] = matchPersonId
             } else {
                 remaining.add(face)
             }
@@ -46,8 +51,6 @@ class DbscanClusterer @Inject constructor() {
 
         return ClusteringResult(assignments, dbscanResult.centroids)
     }
-
-    private fun computeCentroid(person: Person): FloatArray? = null // Implemented via repo
 
     private fun runDbscan(points: List<ClusteringInput>): ClusteringResult {
         if (points.isEmpty()) return ClusteringResult(emptyMap(), emptyMap())
@@ -61,7 +64,6 @@ class DbscanClusterer @Inject constructor() {
             if (visited[i]) continue
             visited[i] = true
             val neighbors = getNeighbors(points, i)
-            // +1 counts the point itself (sklearn convention)
             if (neighbors.size + 1 >= MIN_SAMPLES) {
                 expandCluster(points, i, neighbors, currentCluster, clusterLabels, visited)
                 currentCluster++
@@ -71,19 +73,17 @@ class DbscanClusterer @Inject constructor() {
         val assignments = mutableMapOf<Long, Long>()
         val centroidMap = mutableMapOf<Long, FloatArray>()
 
-        // Map cluster labels to synthetic person IDs (negative to avoid collisions)
         val clusterToPersonId = mutableMapOf<Int, Long>()
         var syntheticId = -1L
 
         for (i in 0 until n) {
             val label = clusterLabels[i]
-            if (label == -1) continue // noise
+            if (label == -1) continue
 
             val personId = clusterToPersonId.getOrPut(label) { syntheticId-- }
             assignments[points[i].faceDetectionId] = personId
         }
 
-        // Compute centroids
         for ((clusterId, personId) in clusterToPersonId) {
             val clusterPoints = (0 until n)
                 .filter { clusterLabels[it] == clusterId }
@@ -115,7 +115,6 @@ class DbscanClusterer @Inject constructor() {
             if (!visited[neighborIdx]) {
                 visited[neighborIdx] = true
                 val newNeighbors = getNeighbors(points, neighborIdx)
-                // +1 counts the neighbor itself as a core point candidate
                 if (newNeighbors.size + 1 >= MIN_SAMPLES) {
                     neighbors.addAll(newNeighbors.filter { it !in neighbors })
                 }

@@ -64,9 +64,7 @@ class MediaIndexWorker @AssistedInject constructor(
         for ((timestampMs, bitmap) in frames) {
             val faces = faceDetector.detect(bitmap)
             for (face in faces) {
-                with(faceDetector) {
-                    if (!face.passesQualityFilter(bitmap)) continue
-                }
+                if (!faceDetector.passesQualityFilter(face, bitmap)) continue
 
                 val crop = BitmapUtils.cropFace(bitmap, face.boundingBox, padding = 0.20f)
                     ?: continue
@@ -81,7 +79,10 @@ class MediaIndexWorker @AssistedInject constructor(
                     boxTop = face.boundingBox.top / bitmap.height.toFloat(),
                     boxRight = face.boundingBox.right / bitmap.width.toFloat(),
                     boxBottom = face.boundingBox.bottom / bitmap.height.toFloat(),
-                    detectionConfidence = 1f - (face.headEulerAngleY.absoluteValue / 90f),
+                    // ML Kit does not expose a raw detection confidence score.
+                    // Use a normalized yaw-based proxy: faces looking straight ahead score 1.0,
+                    // extreme profiles near 90° score 0.0. This is consistent with quality filtering.
+                    detectionConfidence = (1f - face.headEulerAngleY.absoluteValue / 90f).coerceIn(0f, 1f),
                     rollAngle = face.headEulerAngleZ,
                     yawAngle = face.headEulerAngleY,
                     pitchAngle = face.headEulerAngleX,

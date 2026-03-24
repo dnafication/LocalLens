@@ -26,7 +26,7 @@ class DbscanClustererTest {
             DbscanClusterer.ClusteringInput(2L, emb2)
         )
 
-        val result = clusterer.cluster(inputs, emptyList())
+        val result = clusterer.cluster(inputs, emptyMap())
         val assignment1 = result.assignments[1L]
         val assignment2 = result.assignments[2L]
         assertNotNull(assignment1)
@@ -44,7 +44,7 @@ class DbscanClustererTest {
             DbscanClusterer.ClusteringInput(2L, emb2)
         )
 
-        val result = clusterer.cluster(inputs, emptyList())
+        val result = clusterer.cluster(inputs, emptyMap())
         val assignment1 = result.assignments[1L]
         val assignment2 = result.assignments[2L]
         // Different embeddings should be in different clusters
@@ -53,7 +53,7 @@ class DbscanClustererTest {
 
     @Test
     fun `empty input returns empty result`() {
-        val result = clusterer.cluster(emptyList(), emptyList())
+        val result = clusterer.cluster(emptyList(), emptyMap())
         assertTrue(result.assignments.isEmpty())
         assertTrue(result.centroids.isEmpty())
     }
@@ -66,7 +66,7 @@ class DbscanClustererTest {
     }
 
     @Test
-    fun `epsilon boundary - face at distance 0_39 should cluster`() {
+    fun `epsilon boundary - face within threshold of 0 point 39 should cluster together`() {
         val base = FloatArray(128) { 1f / Math.sqrt(128.0).toFloat() }
         // Create a vector at cosine distance ~0.39 from base
         // cosine distance = 1 - cosine_similarity
@@ -83,7 +83,7 @@ class DbscanClustererTest {
             DbscanClusterer.ClusteringInput(1L, base),
             DbscanClusterer.ClusteringInput(2L, normalized)
         )
-        val result = clusterer.cluster(inputs, emptyList())
+        val result = clusterer.cluster(inputs, emptyMap())
         if (distance < 0.40f) {
             assertEquals(result.assignments[1L], result.assignments[2L])
         } else {
