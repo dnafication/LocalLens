@@ -10,7 +10,7 @@ import com.locallens.app.data.repository.MediaRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.objectbox.BoxStore
-import kotlinx.coroutines.flow.collect
+
 
 @HiltWorker
 class IncrementalScanWorker @AssistedInject constructor(

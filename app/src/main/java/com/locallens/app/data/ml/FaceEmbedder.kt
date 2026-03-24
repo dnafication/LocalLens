@@ -24,10 +24,10 @@ class FaceEmbedder @Inject constructor(private val context: Context) {
             try {
                 gpuDelegate = GpuDelegate()
                 addDelegate(gpuDelegate!!)
+                numThreads = 2
             } catch (e: Exception) {
                 numThreads = 4
             }
-            numThreads = 2
         }
         Interpreter(model, options)
     }

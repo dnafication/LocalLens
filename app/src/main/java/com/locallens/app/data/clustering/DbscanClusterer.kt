@@ -115,7 +115,8 @@ class DbscanClusterer @Inject constructor() {
             if (!visited[neighborIdx]) {
                 visited[neighborIdx] = true
                 val newNeighbors = getNeighbors(points, neighborIdx)
-                if (newNeighbors.size >= MIN_SAMPLES) {
+                // +1 counts the neighbor itself as a core point candidate
+                if (newNeighbors.size + 1 >= MIN_SAMPLES) {
                     neighbors.addAll(newNeighbors.filter { it !in neighbors })
                 }
             }
