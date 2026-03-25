@@ -14,10 +14,15 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.locallens.app.ui.navigation.AppNavigation
 import com.locallens.app.ui.theme.LocalLensTheme
+import com.locallens.app.work.WorkScheduler
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var workScheduler: WorkScheduler
 
     private val requiredPermissions = arrayOf(
         Manifest.permission.READ_MEDIA_IMAGES,
@@ -29,7 +34,7 @@ class MainActivity : ComponentActivity() {
     ) { permissions ->
         val allGranted = permissions.all { it.value }
         if (allGranted) {
-            // Permissions granted - scanning can begin
+            workScheduler.enqueueIncrementalScan()
         }
     }
 
@@ -58,6 +63,8 @@ class MainActivity : ComponentActivity() {
 
         if (ungrantedPermissions.isNotEmpty()) {
             permissionLauncher.launch(ungrantedPermissions)
+        } else {
+            workScheduler.enqueueIncrementalScan()
         }
     }
 }
