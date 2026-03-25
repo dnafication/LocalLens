@@ -9,6 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -29,11 +32,15 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.READ_MEDIA_VIDEO
     )
 
+    // Compose state so the UI tree re-composes when permissions change
+    private var permissionsGranted by mutableStateOf(false)
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.all { it.value }
+        val allGranted = permissions.values.all { it }
         if (allGranted) {
+            permissionsGranted = true
             workScheduler.enqueueIncrementalScan()
         }
     }
@@ -41,7 +48,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        requestPermissionsIfNeeded()
+        permissionsGranted = requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (permissionsGranted) {
+            workScheduler.enqueueIncrementalScan()
+        } else {
+            requestPermissionsIfNeeded()
+        }
 
         setContent {
             LocalLensTheme {
@@ -50,7 +65,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    AppNavigation(navController = navController)
+                    AppNavigation(
+                        navController = navController,
+                        permissionsGranted = permissionsGranted
+                    )
                 }
             }
         }
@@ -63,8 +81,6 @@ class MainActivity : ComponentActivity() {
 
         if (ungrantedPermissions.isNotEmpty()) {
             permissionLauncher.launch(ungrantedPermissions)
-        } else {
-            workScheduler.enqueueIncrementalScan()
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.locallens.app.ui.photo_detail
 
+import android.content.ContentUris
+import android.provider.MediaStore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +32,8 @@ class PhotoDetailViewModel @Inject constructor(
     private val personRepository: PersonRepository
 ) : ViewModel() {
 
-    private val mediaFileId: Long = savedStateHandle.get<Long>("mediaFileId") ?: 0L
+    // Route passes mediaStoreId (stable MediaStore._ID), not the ObjectBox row id
+    private val mediaStoreId: Long = savedStateHandle.get<Long>("mediaFileId") ?: 0L
 
     private val _uiState = MutableStateFlow(PhotoDetailUiState())
     val uiState: StateFlow<PhotoDetailUiState> = _uiState.asStateFlow()
@@ -41,8 +44,24 @@ class PhotoDetailViewModel @Inject constructor(
 
     private fun loadPhotoDetail() {
         viewModelScope.launch {
-            val mediaFile = mediaRepository.getById(mediaFileId)
-            val faces = faceRepository.getByMediaFile(mediaFileId)
+            // Prefer the indexed record (includes indexing state, face data), but fall back to
+            // a minimal MediaFile built from the generic Files content URI so the image still
+            // displays even before the background worker has processed this file.
+            val mediaFile = mediaRepository.getByMediaStoreId(mediaStoreId)
+                ?: MediaFile(
+                    mediaStoreId = mediaStoreId,
+                    uri = ContentUris.withAppendedId(
+                        MediaStore.Files.getContentUri("external"),
+                        mediaStoreId
+                    ).toString()
+                )
+
+            val faces = if (mediaFile.id > 0) {
+                faceRepository.getByMediaFile(mediaFile.id)
+            } else {
+                emptyList()
+            }
+
             val facePersonPairs = faces.map { face ->
                 val personId = face.person.targetId
                 val person = if (personId > 0) personRepository.getById(personId) else null

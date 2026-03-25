@@ -26,15 +26,16 @@ object Routes {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, permissionsGranted: Boolean = false) {
     NavHost(
         navController = navController,
         startDestination = Routes.HOME
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                onPhotoClick = { mediaFileId ->
-                    navController.navigate(Routes.photoDetail(mediaFileId))
+                permissionsGranted = permissionsGranted,
+                onPhotoClick = { mediaStoreId ->
+                    navController.navigate(Routes.photoDetail(mediaStoreId))
                 },
                 onNavigateToPeople = {
                     navController.navigate(Routes.PEOPLE)

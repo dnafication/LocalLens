@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,11 +40,19 @@ import com.locallens.app.data.db.entities.MediaFile
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    permissionsGranted: Boolean,
     onPhotoClick: (Long) -> Unit,
     onNavigateToPeople: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Re-run whenever permission state changes (e.g. just granted for the first time)
+    LaunchedEffect(permissionsGranted) {
+        if (permissionsGranted) {
+            viewModel.refresh()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -53,10 +62,10 @@ fun HomeScreen(
                     IconButton(onClick = onNavigateToPeople) {
                         Icon(Icons.Default.People, contentDescription = "People")
                     }
-                    IconButton(onClick = { viewModel.onSearchClick() }) {
+                    IconButton(onClick = { }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
-                    IconButton(onClick = { viewModel.onSettingsClick() }) {
+                    IconButton(onClick = { }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
@@ -75,6 +84,27 @@ fun HomeScreen(
                 }
             }
 
+            !permissionsGranted -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Media permission required",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(
+                            text = "Grant READ_MEDIA_IMAGES and READ_MEDIA_VIDEO permissions",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+
             uiState.mediaFiles.isEmpty() -> {
                 Box(
                     modifier = Modifier
@@ -88,7 +118,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Text(
-                            text = "Grant media permissions and scan to get started",
+                            text = "No supported photos or videos were found on this device",
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
@@ -120,14 +150,15 @@ fun MediaGrid(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        items(mediaFiles, key = { it.id }) { mediaFile ->
+        // Use mediaStoreId as the stable key — ObjectBox id is 0 for unindexed files
+        items(mediaFiles, key = { it.mediaStoreId }) { mediaFile ->
             AsyncImage(
                 model = mediaFile.uri,
                 contentDescription = null,
                 modifier = Modifier
                     .aspectRatio(1f)
                     .clip(MaterialTheme.shapes.small)
-                    .clickable { onPhotoClick(mediaFile.id) },
+                    .clickable { onPhotoClick(mediaFile.mediaStoreId) },
                 contentScale = ContentScale.Crop
             )
         }
